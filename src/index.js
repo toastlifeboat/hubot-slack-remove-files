@@ -51,7 +51,7 @@ module.exports = function(robot) {
       async.waterfall([
         function(callback) {
           // IT FINDS THE NUMBER OF PAGES (FILES ARE PAGINATED)
-          slack.api("files.list", { ts_to: thirtyDaysAgo }, function(err, response) {
+          slack.api("files.list", { ts_to: interval }, function(err, response) {
             var pages = response.paging.pages;
             console.log("Token: " + token);
             console.log("Pages: " + pages);
