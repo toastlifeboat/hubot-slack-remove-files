@@ -5,6 +5,14 @@ var CronJob = require('cron').CronJob;
 
 module.exports = function(robot) {
 
+  var CHAT_ROOM = "CHAT_ROOM";
+  var BOT_WARNING_MESSAGE = "BOT_WARNING_MESSAGE";
+  var BOT_DELETED_FILES_MESSAGE = "BOT_DELETED_FILES_MESSAGE";
+  var DAYS = 30;
+
+  var CLIENT_ID = "CLIENT_ID";
+  var CLIENT_SECRET = "CLIENT_SECRET";
+
   // TOKEN BOT
   var tokenBot = "BOT_TOKEN";
   var slackBot = new Slack(tokenBot);
@@ -16,9 +24,16 @@ module.exports = function(robot) {
     "TOKEN_TEAM_MEMBER_3"
   ];
 
-  var CHAT_ROOM = "CHAT_ROOM";
-  var BOT_DELETED_FILES_MESSAGE = "BOT_DELETED_FILES_MESSAGE";
-  var DAYS = 30;
+  // YOU ARE WARNED AN HOUR BEFORE
+  new CronJob('00 00 10 01 * *', function(){
+    slackBot.api("chat.postMessage", { 
+      channel: CHAT_ROOM, 
+      text: BOT_WARNING_MESSAGE, 
+      as_user: true
+    }, function(err, response) {
+      console.log("Users warned.");
+    });
+  });
   
   // IT STARTS AT 1st OF EVERY MONTH
   new CronJob('00 00 11 01 * *', function(){
@@ -31,20 +46,19 @@ module.exports = function(robot) {
     async.each(tokens, function(token, callback) {
 
       slack = new Slack(token);
+      console.log(slack);
 
       async.waterfall([
         function(callback) {
-          // FIND THE NUMBER OF PAGES (FILES ARE PAGINATED)
-          slack.api("files.list", { ts_to: interval }, function(err, response) {
+          // IT FINDS THE NUMBER OF PAGES (FILES ARE PAGINATED)
+          slack.api("files.list", { ts_to: thirtyDaysAgo }, function(err, response) {
             var pages = response.paging.pages;
+            console.log("Token: " + token);
             console.log("Pages: " + pages);
             callback(null, pages);
           });
         },
-        function(pages, callback) {    
-
-          console.log("Token: " + token);
-
+        function(pages, callback) { 
           // FOR EVERY PAGE
           async.times(pages, function(n, next) {
             slack.api("files.list", { page: n + 1, ts_to: interval }, function(err, response) {
@@ -90,9 +104,23 @@ module.exports = function(robot) {
 
   }, null, true, "Europe/London");
 
+  // GO TO / AND CREATE THE TOKEN
   robot.router.get('/', function(req, res) {
-    var now = new Date();
-    res.send(now);
+    res.send('<a href="https://slack.com/oauth/authorize?scope=files:write:user,files:read&client_id=' + CLIENT_ID + '"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"></a>');
+  });
+
+  // YOU CAN SEE YOUR TOKEN AT /callback 
+  robot.router.get('/callback', function(req, res) {
+    var code = req.query.code;
+
+    request.post({
+      url: "https://slack.com/api/oauth.access",
+      form: { client_id: CLIENT_ID, client_secret: CLIENT_SECRET, code: code }
+    }, function(error, response, body){
+      var body = JSON.parse(body);
+      res.send("Token: " + body.access_token);
+    });
+
   });
 
 }
