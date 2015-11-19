@@ -1,7 +1,7 @@
 {
   "name": "hubot-slack-remove-files",
   "description": "A hubot script that removes files from Slack",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "author": "paolorovella <paolo.rovella@gmail.com>",
   "license": "MIT",
   "keywords": "hubot, files, slack, hubot-scripts",
