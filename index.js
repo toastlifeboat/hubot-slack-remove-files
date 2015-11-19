@@ -6,7 +6,6 @@ module.exports = function(robot) {
   var scripts = fs.readdirSync(scriptsPath);
 
   if(scripts.indexOf('index.js') > -1) {
-    debug('loading hubot-slack-remove-files');
     robot.loadFile(scriptsPath, 'index.js');
   }
 }
