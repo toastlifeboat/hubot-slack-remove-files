@@ -9,6 +9,7 @@ module.exports = function(robot) {
   var BOT_WARNING_MESSAGE = "BOT_WARNING_MESSAGE";
   var BOT_DELETED_FILES_MESSAGE = "BOT_DELETED_FILES_MESSAGE";
   var DAYS = 30;
+  var TYPES = "images";
 
   var CLIENT_ID = "CLIENT_ID";
   var CLIENT_SECRET = "CLIENT_SECRET";
@@ -51,7 +52,7 @@ module.exports = function(robot) {
       async.waterfall([
         function(callback) {
           // IT FINDS THE NUMBER OF PAGES (FILES ARE PAGINATED)
-          slack.api("files.list", { ts_to: interval }, function(err, response) {
+          slack.api("files.list", { ts_to: interval, types: TYPES }, function(err, response) {
             var pages = response.paging.pages;
             console.log("Token: " + token);
             console.log("Pages: " + pages);
@@ -61,7 +62,7 @@ module.exports = function(robot) {
         function(pages, callback) { 
           // FOR EVERY PAGE
           async.times(pages, function(n, next) {
-            slack.api("files.list", { page: n + 1, ts_to: interval }, function(err, response) {
+            slack.api("files.list", { page: n + 1, ts_to: interval, types: TYPES }, function(err, response) {
 
               // FOR EVERY FILE FOUND
               async.each(response.files, function(element, callback) {
